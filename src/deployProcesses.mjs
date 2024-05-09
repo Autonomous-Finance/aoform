@@ -84,6 +84,11 @@ async function deployProcess(processInfo) {
     // Concatenate the prerun script with the main script
     const luaCode = `${prerunScript}\n${mainScript}`;
   
+    if(!process.env.WALLET_JSON) {
+      console.error("Missing WALLET_JSON environment variable. Please provide the wallet JSON in the environment variable WALLET_JSON.");
+      process.exit(1);
+    }
+
     let processId;
     const wallet = JSON.parse(process.env.WALLET_JSON); // Read wallet from environment variable
     const signer = createDataItemSigner(wallet);

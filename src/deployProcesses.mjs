@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('aoform v1.2')
+console.log('aoform v1.3')
 
 import yaml from 'js-yaml';
 import fs from 'fs';
@@ -10,11 +10,7 @@ import path from 'path';
 import { connect, createDataItemSigner } from '@permaweb/ao-connect';
 
 // Connect to the AO network
-const ao = connect({
-  MU_URL: "https://mu.ao-testnet.xyz",
-  CU_URL: "https://cu.ao-testnet.xyz",
-  GATEWAY_URL: "https://g8way.io",
-});
+const ao = connect();
 
 console.log(ao)
 

@@ -12,6 +12,7 @@ program
 program
   .command('apply')
   .description('Deploy or update processes')
+  .option('-f, --file <path>', 'Specify a custom processes.yaml file')
   .action(applyCommand);
 
 program

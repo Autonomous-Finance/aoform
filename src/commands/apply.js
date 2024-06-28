@@ -1,8 +1,8 @@
 import { deployProcesses } from '../deployProcesses.mjs';
 
-export const applyCommand = async () => {
+export const applyCommand = async (options) => {
   try {
-    await deployProcesses();
+    await deployProcesses(options.file);
   } catch (err) {
     console.error('Error deploying processes:', err);
   }

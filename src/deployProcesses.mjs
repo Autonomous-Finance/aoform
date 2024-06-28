@@ -124,7 +124,10 @@ async function deployProcess(processInfo, state) {
         signer
       });
       console.log(`Successfully sent 'eval' action for process '${name}'.`);
-      console.log(r);
+      console.log('Eval message id', r);
+
+      console.log('view result on ao.link:')
+      console.log(`https://www.ao.link/#/message/${r}`)
       break;
     } catch (err) {
       attempts++;

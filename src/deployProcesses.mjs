@@ -112,8 +112,8 @@ async function deployProcess(processInfo, state) {
   console.log("Sending code...")
   while (attempts < maxAttempts) {
     try {
-      const r = await ao.message({
-        process: processId,
+      const messageId = await ao.message({ 
+        process: processId, 
         data: luaCode,
         tags: [
           {
@@ -121,10 +121,23 @@ async function deployProcess(processInfo, state) {
             value: 'Eval'
           }
         ],
-        signer
+        signer 
       });
       console.log(`Successfully sent 'eval' action for process '${name}'.`);
-      console.log('Eval message id', r);
+      console.log(messageId);
+
+      const result = await ao.result({
+        process: processId,
+        message: messageId
+      });
+
+      if (result.Error) {
+        console.error('Error on `eval` action ', JSON.stringify(result.Error))
+        process.exit(1)
+      }
+
+      console.log(`Successfully sent 'eval' action for process '${name}'.`);
+      console.log('Eval message id', messageId);
 
       console.log('view result on ao.link:')
       console.log(`https://www.ao.link/#/message/${r}`)
@@ -136,6 +149,7 @@ async function deployProcess(processInfo, state) {
       console.log(`Failed to send 'eval' action for process '${name}'. Attempt ${attempts}/${maxAttempts}`);
       if (attempts === maxAttempts) {
         console.error(`Failed to send 'eval' action for process '${name}' after ${maxAttempts} attempts.`);
+        process.exit(1)
       } else {
         console.log(`Retrying in ${delay / 1000} seconds...`);
         await new Promise(resolve => setTimeout(resolve, delay));

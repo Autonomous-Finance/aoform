@@ -140,7 +140,7 @@ async function deployProcess(processInfo, state) {
       console.log('Eval message id', messageId);
 
       console.log('view result on ao.link:')
-      console.log(`https://www.ao.link/#/message/${r}`)
+      console.log(`https://www.ao.link/#/message/${messageId}`)
       break;
     } catch (err) {
       attempts++;

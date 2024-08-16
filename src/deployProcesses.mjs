@@ -51,7 +51,7 @@ async function deployProcess(processInfo, state) {
   }
 
   let resetModulesCode = '';
-  if (processInfo.resetModules) {
+  if (processInfo.resetModules !== 'false') {
     resetModulesCode = `
       INITIAL_MODULES = { ".crypto.mac.hmac", "string", ".crypto.cipher.morus", "debug", ".handlers", ".crypto.padding.zero", ".crypto.digest.sha2_256", ".crypto.digest.md2", ".crypto.util.hex", ".default", ".eval", ".crypto.util.bit", ".utils", ".crypto.util.stream", "_G", "json", ".crypto.cipher.norx", ".base64", ".crypto.cipher.aes256", ".crypto.digest.md4", ".crypto.util.queue", ".stringify", ".handlers-utils", ".crypto.cipher.issac", "utf8", ".crypto.cipher.aes", ".dump", ".process", ".crypto.cipher.mode.cfb", "ao", ".pretty", ".crypto.digest.sha1", "coroutine", ".crypto.cipher.aes128", ".crypto.init", ".crypto.digest.sha2_512", ".crypto.cipher.aes192", ".crypto.kdf.pbkdf2", ".crypto.mac.init", ".crypto.digest.init", "package", "table", ".crypto.cipher.mode.ctr", ".crypto.util.array", "bit32", ".crypto.cipher.mode.ecb", ".crypto.kdf.init", ".assignment", ".crypto.cipher.mode.cbc", ".crypto.digest.blake2b", ".crypto.digest.sha3", ".crypto.digest.md5", ".crypto.cipher.mode.ofb", "io", "os", ".chance", ".crypto.util.init", ".crypto.cipher.init" }
       
@@ -134,8 +134,8 @@ async function deployProcess(processInfo, state) {
   console.log("Sending code...")
   while (attempts < maxAttempts) {
     try {
-      const messageId = await ao.message({ 
-        process: processId, 
+      const messageId = await ao.message({
+        process: processId,
         data: luaCode,
         tags: [
           {
@@ -143,7 +143,7 @@ async function deployProcess(processInfo, state) {
             value: 'Eval'
           }
         ],
-        signer 
+        signer
       });
       console.log(`Successfully sent 'eval' action for process '${name}'.`);
       console.log(messageId);

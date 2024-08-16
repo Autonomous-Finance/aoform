@@ -22,6 +22,7 @@ The configuration for the deploy script is defined in the `processes.yaml` file.
 - name: dexi-monitor-test-v2-8
   file: build/output.lua
   prerun: reset-modules.lua
+  resetModules: true
   scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
   module: GYrbbe0VbHim_7Hi6zrOpHQXrSQz07XNtwCnfbFo2I0
   tags:
@@ -40,3 +41,4 @@ The configuration for the deploy script is defined in the `processes.yaml` file.
 - scheduler: id of the scheduler
 - module: id of the module
 - tags: list of tags to spawn the process with
+- resetModules: if true, all modules except the standard ao libary will be unloaded before your code is eval'ed

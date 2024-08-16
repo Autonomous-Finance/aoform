@@ -24,7 +24,7 @@ The configuration for the deploy script is defined in the `processes.yaml` file.
   prerun: reset-modules.lua
   resetModules: true
   scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
-  module: GYrbbe0VbHim_7Hi6zrOpHQXrSQz07XNtwCnfbFo2I0
+  module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
   tags:
     - name: Process-Type
       value: Dexi-Aggregator-Test

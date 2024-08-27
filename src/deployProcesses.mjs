@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
-import { connect, createDataItemSigner } from '@permaweb/ao-connect';
+import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 
 // Function to get the hash of a file
 function getFileHash(filePath) {

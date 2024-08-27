@@ -12,7 +12,7 @@ npm install --save-dev aoform
 1. install in your AO project
 2. create a processes.yaml in your project root
 2. set your wallet (`export WALLET_JSON="$(cat ~/.aos.json)"`)
-4. run the deploy script (`npx aoform deploy`)
+4. run the deploy script (`npx aoform apply`)
 
 ## Configuration
 The configuration for the deploy script is defined in the `processes.yaml` file. This file is located in the root of your AO project.

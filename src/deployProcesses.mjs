@@ -9,11 +9,10 @@ import crypto from 'crypto';
 import path from 'path';
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 
-// Function to get the hash of a file
-function getFileHash(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
+// Function to get the hash of a string
+function getStringHash(sourceText) {
   const hashSum = crypto.createHash('sha256');
-  hashSum.update(fileBuffer);
+  hashSum.update(sourceText);
   return hashSum.digest('hex');
 }
 
@@ -71,19 +70,7 @@ async function deploySource(ao, processInfo, state, signer, directory) {
   const name = processInfo.name;
   const processId = directory[name];
   const filePath = processInfo.file;
-  const currentHash = getFileHash(filePath);
   const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
-
-  // Check if the process has already been deployed
-  if (state[name]) {
-    const processState = state[name];
-    const lastHash = processState.hash;
-
-    if (lastHash === currentHash) {
-      console.log(`Process '${name}' is up-to-date.`);
-      return;
-    }
-  }
 
   // Load the Lua file
   const mainScript = fs.readFileSync(filePath, 'utf8');
@@ -127,6 +114,19 @@ async function deploySource(ao, processInfo, state, signer, directory) {
 
   // Concatenate the prerun script with the main script
   const luaCode = `${directoryCode}\n${resetModulesCode}\n${prerunScript}\n${mainScript}`;
+
+  const currentHash = getStringHash(luaCode);
+
+  // Check if the process has already been deployed
+  if (state[name]) {
+    const processState = state[name];
+    const lastHash = processState.hash;
+
+    if (lastHash === currentHash) {
+      console.log(`Process '${name}' is up-to-date.`);
+      return;
+    }
+  }
 
   // Try sending the 'eval' action 5 times with a 30-second delay
   let attempts = 0;

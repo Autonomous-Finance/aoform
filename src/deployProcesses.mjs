@@ -81,15 +81,6 @@ async function deploySource(ao, processInfo, state, signer, directory) {
     prerunScript = fs.readFileSync(prerunFilePath, 'utf8');
   }
 
-  let directoryCode = '';
-  if (processInfo.directory === true) {
-    directoryCode = `
-      package.preload["aoform.directory"] = {
-        ${Object.keys(directory).map((key) => `["${key}"] = "${directory[key]}"`).join(',\n')}
-      }
-      `;
-  }
-
   let resetModulesCode = '';
   if (processInfo.resetModules !== false) {
     resetModulesCode = `
@@ -112,8 +103,17 @@ async function deploySource(ao, processInfo, state, signer, directory) {
       `;
   }
 
+  let directoryCode = '';
+  if (processInfo.directory === true) {
+    directoryCode = `
+      package.preload["aoform.directory"] = function () return {
+        ${Object.keys(directory).map((key) => `["${key}"] = "${directory[key]}"`).join(',\n')}
+      } end
+      `;
+  }
+
   // Concatenate the prerun script with the main script
-  const luaCode = `${directoryCode}\n${resetModulesCode}\n${prerunScript}\n${mainScript}`;
+  const luaCode = `${resetModulesCode}\n${directoryCode}\n${prerunScript}\n${mainScript}`;
 
   const currentHash = getStringHash(luaCode);
 
@@ -204,6 +204,7 @@ export async function deployProcesses(customFilePath) {
   try {
     const processesYaml = fs.readFileSync(processesYamlPath, 'utf8');
     processes = yaml.load(processesYaml);
+    console.log(JSON.stringify(processes))
   } catch (err) {
     if (err.code !== 'ENOENT') {
       throw err;

@@ -204,7 +204,6 @@ export async function deployProcesses(customFilePath) {
   try {
     const processesYaml = fs.readFileSync(processesYamlPath, 'utf8');
     processes = yaml.load(processesYaml);
-    console.log(JSON.stringify(processes))
   } catch (err) {
     if (err.code !== 'ENOENT') {
       throw err;

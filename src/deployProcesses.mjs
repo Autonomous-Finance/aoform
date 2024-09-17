@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('aoform v1.3')
+console.log(`aoform v1.0.4`);
 
 import yaml from 'js-yaml';
 import fs from 'fs';
@@ -9,88 +9,24 @@ import crypto from 'crypto';
 import path from 'path';
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 
-// Function to get the hash of a file
-function getFileHash(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
+// Function to get the hash of a string
+function getStringHash(sourceText) {
   const hashSum = crypto.createHash('sha256');
-  hashSum.update(fileBuffer);
+  hashSum.update(sourceText);
   return hashSum.digest('hex');
 }
 
-// Function to deploy a process
-async function deployProcess(processInfo, state) {
-
-  // Connect to the AO network
-  const ao = connect();
-
-  console.log(ao)
+async function spawnProcess(ao, processInfo, state, signer) {
   const name = processInfo.name;
-  const filePath = processInfo.file;
   const tags = processInfo.tags || [];
-  const currentHash = getFileHash(filePath);
-  const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
-
-  // Check if the process has already been deployed
-  if (state[name]) {
-    const processState = state[name];
-    const lastHash = processState.hash;
-
-    if (lastHash === currentHash) {
-      console.log(`Process '${name}' is up-to-date.`);
-      return;
-    }
-  }
-
-  // Load the Lua file
-  const mainScript = fs.readFileSync(filePath, 'utf8');
-
-  // Load the prerun script, if provided
-  let prerunScript = '';
-  if (prerunFilePath) {
-    prerunScript = fs.readFileSync(prerunFilePath, 'utf8');
-  }
-
-  let resetModulesCode = '';
-  if (processInfo.resetModules !== 'false') {
-    resetModulesCode = `
-      INITIAL_MODULES = { ".crypto.mac.hmac", "string", ".crypto.cipher.morus", "debug", ".handlers", ".crypto.padding.zero", ".crypto.digest.sha2_256", ".crypto.digest.md2", ".crypto.util.hex", ".default", ".eval", ".crypto.util.bit", ".utils", ".crypto.util.stream", "_G", "json", ".crypto.cipher.norx", ".base64", ".crypto.cipher.aes256", ".crypto.digest.md4", ".crypto.util.queue", ".stringify", ".handlers-utils", ".crypto.cipher.issac", "utf8", ".crypto.cipher.aes", ".dump", ".process", ".crypto.cipher.mode.cfb", "ao", ".pretty", ".crypto.digest.sha1", "coroutine", ".crypto.cipher.aes128", ".crypto.init", ".crypto.digest.sha2_512", ".crypto.cipher.aes192", ".crypto.kdf.pbkdf2", ".crypto.mac.init", ".crypto.digest.init", "package", "table", ".crypto.cipher.mode.ctr", ".crypto.util.array", "bit32", ".crypto.cipher.mode.ecb", ".crypto.kdf.init", ".assignment", ".crypto.cipher.mode.cbc", ".crypto.digest.blake2b", ".crypto.digest.sha3", ".crypto.digest.md5", ".crypto.cipher.mode.ofb", "io", "os", ".chance", ".crypto.util.init", ".crypto.cipher.init" }
-      
-      local function isInitialModule(value)
-          for _, v in pairs(INITIAL_MODULES) do
-              if v == value then
-                  return true
-              end
-          end
-          return false
-      end
-
-      for k, _ in pairs(package.loaded) do
-          if not isInitialModule(k) then
-              package.loaded[k] = nil
-          end
-      end
-      `;
-  }
-
-  // Concatenate the prerun script with the main script
-  const luaCode = `${resetModulesCode}\n${prerunScript}\n${mainScript}`;
-
-  if (!process.env.WALLET_JSON) {
-    console.error("Missing WALLET_JSON environment variable. Please provide the wallet JSON in the environment variable WALLET_JSON.");
-    process.exit(1);
-  }
 
   let processId;
-  const wallet = JSON.parse(process.env.WALLET_JSON); // Read wallet from environment variable
-  const signer = createDataItemSigner(wallet);
-
   console.log("Spawning process...", {
     module: processInfo.module,
     scheduler: processInfo.scheduler,
     signer,
     tags,
   })
-
 
   if (!state[name] || !state[name].processId) {
     let spawnAttempts = 0;
@@ -102,7 +38,7 @@ async function deployProcess(processInfo, state) {
         processId = await ao.spawn({
           module: processInfo.module,
           scheduler: processInfo.scheduler,
-          signer: createDataItemSigner(wallet),
+          signer,
           tags,
         });
         console.log("Spawned process:", processId);
@@ -124,6 +60,72 @@ async function deployProcess(processInfo, state) {
   } else {
     processId = state[name].processId;
     console.log(`Using existing process ID '${processId}' for process '${name}'.`);
+  }
+
+  return processId;
+}
+
+// Function to deploy a process
+async function deploySource(ao, processInfo, state, signer, directory) {
+  const name = processInfo.name;
+  const processId = directory[name];
+  const filePath = processInfo.file;
+  const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
+
+  // Load the Lua file
+  const mainScript = fs.readFileSync(filePath, 'utf8');
+
+  // Load the prerun script, if provided
+  let prerunScript = '';
+  if (prerunFilePath) {
+    prerunScript = fs.readFileSync(prerunFilePath, 'utf8');
+  }
+
+  let resetModulesCode = '';
+  if (processInfo.resetModules !== false) {
+    resetModulesCode = `
+      INITIAL_MODULES = { ".crypto.mac.hmac", "string", ".crypto.cipher.morus", "debug", ".handlers", ".crypto.padding.zero", ".crypto.digest.sha2_256", ".crypto.digest.md2", ".crypto.util.hex", ".default", ".eval", ".crypto.util.bit", ".utils", ".crypto.util.stream", "_G", "json", ".crypto.cipher.norx", ".base64", ".crypto.cipher.aes256", ".crypto.digest.md4", ".crypto.util.queue", ".stringify", ".handlers-utils", ".crypto.cipher.issac", "utf8", ".crypto.cipher.aes", ".dump", ".process", ".crypto.cipher.mode.cfb", "ao", ".pretty", ".crypto.digest.sha1", "coroutine", ".crypto.cipher.aes128", ".crypto.init", ".crypto.digest.sha2_512", ".crypto.cipher.aes192", ".crypto.kdf.pbkdf2", ".crypto.mac.init", ".crypto.digest.init", "package", "table", ".crypto.cipher.mode.ctr", ".crypto.util.array", "bit32", ".crypto.cipher.mode.ecb", ".crypto.kdf.init", ".assignment", ".crypto.cipher.mode.cbc", ".crypto.digest.blake2b", ".crypto.digest.sha3", ".crypto.digest.md5", ".crypto.cipher.mode.ofb", "io", "os", ".chance", ".crypto.util.init", ".crypto.cipher.init" }
+      
+      local function isInitialModule(value)
+          for _, v in pairs(INITIAL_MODULES) do
+              if v == value then
+                  return true
+              end
+          end
+          return false
+      end
+
+      for k, _ in pairs(package.loaded) do
+          if not isInitialModule(k) then
+              package.loaded[k] = nil
+          end
+      end
+      `;
+  }
+
+  let directoryCode = '';
+  if (processInfo.directory === true) {
+    directoryCode = `
+      package.preload["aoform.directory"] = function () return {
+        ${Object.keys(directory).map((key) => `["${key}"] = "${directory[key]}"`).join(',\n')}
+      } end
+      `;
+  }
+
+  // Concatenate the prerun script with the main script
+  const luaCode = `${resetModulesCode}\n${directoryCode}\n${prerunScript}\n${mainScript}`;
+
+  const currentHash = getStringHash(luaCode);
+
+  // Check if the process has already been deployed
+  if (state[name]) {
+    const processState = state[name];
+    const lastHash = processState.hash;
+
+    if (lastHash === currentHash) {
+      console.log(`Process '${name}' is up-to-date.`);
+      return;
+    }
   }
 
   // Try sending the 'eval' action 5 times with a 30-second delay
@@ -187,6 +189,14 @@ async function deployProcess(processInfo, state) {
 }
 
 export async function deployProcesses(customFilePath) {
+  if (!process.env.WALLET_JSON) {
+    console.error("Missing WALLET_JSON environment variable. Please provide the wallet JSON in the environment variable WALLET_JSON.");
+    process.exit(1);
+  }
+
+  const wallet = JSON.parse(process.env.WALLET_JSON); // Read wallet from environment variable
+  const signer = createDataItemSigner(wallet);
+
   // Load the YAML file
   const stateFile = customFilePath ? 'state-' + customFilePath : 'state.yaml'
   const processesYamlPath = path.join(process.cwd(), customFilePath || 'processes.yaml');
@@ -214,9 +224,21 @@ export async function deployProcesses(customFilePath) {
       throw err;
     }
   }
-  // Deploy or update processes
+
+  // Connect to the AO network
+  const ao = connect();
+
+  console.log(ao)
+
+  // Spawn processes
+  let directory = {}
   for (const processInfo of processes) {
-    await deployProcess(processInfo, state);
+    directory[processInfo.name] = await spawnProcess(ao, processInfo, state, signer);
+  }
+
+  // Update processes source
+  for (const processInfo of processes) {
+    await deploySource(ao, processInfo, state, signer, directory);
   }
 
   // Save the updated state

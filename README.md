@@ -42,3 +42,4 @@ The configuration for the deploy script is defined in the `processes.yaml` file.
 - module: id of the module
 - tags: list of tags to spawn the process with
 - resetModules: if true, all modules except the standard ao libary will be unloaded before your code is eval'ed (default: true)
+- directory: if true, the `aoform.directory` package will be enabled. This returns a table with process names as the keys, and process ids as the values. (default: false)

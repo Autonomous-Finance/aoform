@@ -228,8 +228,6 @@ export async function deployProcesses(customFilePath) {
   // Connect to the AO network
   const ao = connect();
 
-  console.log(ao)
-
   // Spawn processes
   let directory = {}
   for (const processInfo of processes) {

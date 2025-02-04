@@ -8,6 +8,8 @@ import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
+import { pack } from './pack-lua.mjs';
+
 
 // Function to get the hash of a string
 function getStringHash(sourceText) {
@@ -16,9 +18,18 @@ function getStringHash(sourceText) {
   return hashSum.digest('hex');
 }
 
-async function spawnProcess(ao, processInfo, state, signer) {
+async function spawnProcess(ao, processInfo, state, signer, directory) {
   const name = processInfo.name;
-  const tags = processInfo.tags || [];
+  let tags = processInfo.tags || [];
+
+  // if value matches state key then
+  // replace with processId
+  tags = tags.map(t => {
+    if (directory[t.value]) {
+      t.value = directory[t.value]
+    }
+    return t
+  })
 
   let processId;
   console.log("Spawning process...", {
@@ -73,7 +84,8 @@ async function deploySource(ao, processInfo, state, signer, directory) {
   const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
 
   // Load the Lua file
-  const mainScript = fs.readFileSync(filePath, 'utf8');
+  // const mainScript = fs.readFileSync(filePath, 'utf8');
+  const mainScript = pack(filePath)
 
   // Load the prerun script, if provided
   let prerunScript = '';
@@ -228,12 +240,10 @@ export async function deployProcesses(customFilePath) {
   // Connect to the AO network
   const ao = connect();
 
-  console.log(ao)
-
   // Spawn processes
   let directory = {}
   for (const processInfo of processes) {
-    directory[processInfo.name] = await spawnProcess(ao, processInfo, state, signer);
+    directory[processInfo.name] = await spawnProcess(ao, processInfo, state, signer, directory);
   }
 
   // Update processes source

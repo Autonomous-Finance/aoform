@@ -18,9 +18,18 @@ function getStringHash(sourceText) {
   return hashSum.digest('hex');
 }
 
-async function spawnProcess(ao, processInfo, state, signer) {
+async function spawnProcess(ao, processInfo, state, signer, directory) {
   const name = processInfo.name;
-  const tags = processInfo.tags || [];
+  let tags = processInfo.tags || [];
+
+  // if value matches state key then
+  // replace with processId
+  tags = tags.map(t => {
+    if (directory[t.value]) {
+      t.value = directory[t.value]
+    }
+    return t
+  })
 
   let processId;
   console.log("Spawning process...", {
@@ -231,12 +240,10 @@ export async function deployProcesses(customFilePath) {
   // Connect to the AO network
   const ao = connect();
 
-  console.log(ao)
-
   // Spawn processes
   let directory = {}
   for (const processInfo of processes) {
-    directory[processInfo.name] = await spawnProcess(ao, processInfo, state, signer);
+    directory[processInfo.name] = await spawnProcess(ao, processInfo, state, signer, directory);
   }
 
   // Update processes source

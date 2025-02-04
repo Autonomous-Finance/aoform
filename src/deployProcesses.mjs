@@ -8,6 +8,8 @@ import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
+import { pack } from './pack-lua.mjs';
+
 
 // Function to get the hash of a string
 function getStringHash(sourceText) {
@@ -73,7 +75,8 @@ async function deploySource(ao, processInfo, state, signer, directory) {
   const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
 
   // Load the Lua file
-  const mainScript = fs.readFileSync(filePath, 'utf8');
+  // const mainScript = fs.readFileSync(filePath, 'utf8');
+  const mainScript = pack(filePath)
 
   // Load the prerun script, if provided
   let prerunScript = '';

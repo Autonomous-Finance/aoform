@@ -85,7 +85,7 @@ async function deploySource(ao, processInfo, state, signer, directory) {
 
   // Load the Lua file
   let mainScript;
-  if processInfo.pack {
+  if (processInfo.pack) {
     mainScript = pack(filePath)
   } else {
     mainScript = fs.readFileSync(filePath, 'utf8');

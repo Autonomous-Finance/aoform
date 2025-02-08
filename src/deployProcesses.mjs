@@ -84,8 +84,13 @@ async function deploySource(ao, processInfo, state, signer, directory) {
   const prerunFilePath = processInfo.prerun || ''; // Get the prerun file path, or an empty string if not provided
 
   // Load the Lua file
-  // const mainScript = fs.readFileSync(filePath, 'utf8');
-  const mainScript = pack(filePath)
+  let mainScript:
+  if processInfo.pack {
+    mainScript = pack(filePath)
+  } else {
+    mainScript = fs.readFileSync(filePath, 'utf8');
+  }
+  
 
   // Load the prerun script, if provided
   let prerunScript = '';
